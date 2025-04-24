@@ -8,7 +8,6 @@ typedef char Ficha;
 // Matriz global que almacena las fichas en cada celda del tablero.
 Ficha piezas[FILAS][COLUMNAS];
 
-
 // Función para inicializar el arreglo de fichas: todas las celdas se inician en ' ' (vacío).
 void inicializarPiezas() {
     for (int i = 0; i < FILAS; i++) {
@@ -18,8 +17,7 @@ void inicializarPiezas() {
     }
 }
 
-// Función para imprimir el tablero. Aquí se dibujan las figuras (hexágono o rombo)
-// y, en la línea central (tipoLinea == 1) se muestra la ficha si está presente.
+// Función para imprimir el tablero.
 int tablero(void) {
     // Encabezado de columnas (0 a COLUMNAS-1)
     printf("    ");
@@ -30,10 +28,9 @@ int tablero(void) {
 
     // Cada celda del tablero se dibuja usando 3 líneas.
     for (int fila = 0; fila < FILAS * 3; fila++) {
-        int tipoLinea = fila % 3;      // 0: parte superior, 1: línea central, 2: inferior
-        int filaTablero = fila / 3;      // índice lógico de fila en el tablero
+        int tipoLinea = fila % 3;
+        int filaTablero = fila / 3;
 
-        // Mostrar número de fila en la línea media.
         if (tipoLinea == 1) {
             printf(" %2d ", filaTablero);
         } else {
@@ -43,9 +40,6 @@ int tablero(void) {
         for (int col = 0; col < COLUMNAS; col++) {
             int imprimirFigura = 0;
 
-            // Según las reglas de diseño:
-            // Si la fila lógica es par se muestran figuras (hexágonos) en columnas pares.
-            // Si la fila lógica es impar se muestran figuras (rombos) en columnas impares.
             if ((filaTablero % 2 == 0 && col % 2 == 0) ||
                 (filaTablero % 2 == 1 && col % 2 == 1)) {
                 imprimirFigura = 1;
@@ -53,13 +47,11 @@ int tablero(void) {
 
             if (imprimirFigura) {
                 if (filaTablero % 2 == 0) {
-                    // Filas pares: hexágonos
                     if (tipoLinea == 0) {
                         printf("  __  ");
                     } else if (tipoLinea == 1) {
-                        // En la línea central, se muestra la ficha si existe.
                         if (piezas[filaTablero][col] != ' ') {
-                            printf(" |%c| ", piezas[filaTablero][col]);
+                            printf(" /%c \\ ", piezas[filaTablero][col]);
                         } else {
                             printf(" /  \\ ");
                         }
@@ -67,21 +59,20 @@ int tablero(void) {
                         printf(" \\__/ ");
                     }
                 } else {
-                    // Filas impares: rombos
                     if (tipoLinea == 1) {
                         if (piezas[filaTablero][col] != ' ') {
-                            printf(" |%c| ", piezas[filaTablero][col]);
+                            printf(" /%c \\ ", piezas[filaTablero][col]);
                         } else {
                             printf(" /  \\ ");
                         }
                     } else if (tipoLinea == 2) {
                         printf(" \\  / ");
                     } else {
-                        printf("      "); // Sin parte superior en rombo
+                        printf("      ");
                     }
                 }
             } else {
-                printf("      "); // Espacio en blanco en celdas sin figura
+                printf("      ");
             }
         }
         printf("\n");
@@ -89,38 +80,45 @@ int tablero(void) {
     return 0;
 }
 
-// Función que permite mover una ficha de (origenFila, origenCol) a (destinoFila, destinoCol)
-// Si la casilla destino está ocupada se "captura" la ficha allí.
+// Función corregida para mover una ficha
 void moverFicha(int origenFila, int origenCol, int destinoFila, int destinoCol) {
-    // Se verifica que las coordenadas sean válidas (esto se podría ampliar con validaciones adicionales).
     if (origenFila < 0 || origenFila >= FILAS || origenCol < 0 || origenCol >= COLUMNAS ||
         destinoFila < 0 || destinoFila >= FILAS || destinoCol < 0 || destinoCol >= COLUMNAS) {
         printf("Coordenadas fuera de rango.\n");
         return;
     }
+
     if (piezas[origenFila][origenCol] == ' ') {
         printf("No hay ficha en la posición de origen.\n");
         return;
     }
 
-    // Si la celda destino ya tiene una ficha, se informa que se capturará esa ficha.
+    if (origenFila == destinoFila) {
+        printf("Movimiento inválido: misma fila.\n");
+        return;
+    }
+
+    if ((destinoFila %2==1 && destinoCol %2==1)) {
+        printf("Movimiento inválido: casilla destino no válida.\n");
+        return;
+    }
+    if (destinoFila > origenFila + 2){
+    	printf("Movimiento invalido, no puedes saltar casillas. \n");
+    	return;
+    }
+
     if (piezas[destinoFila][destinoCol] != ' ') {
         printf("Se captura la ficha '%c' en la posición (%d, %d).\n",
                piezas[destinoFila][destinoCol], destinoFila, destinoCol);
     }
 
-    // Mover la ficha: se copia desde origen y se "limpia" el origen.
     piezas[destinoFila][destinoCol] = piezas[origenFila][origenCol];
     piezas[origenFila][origenCol] = ' ';
 }
 
 int main() {
-    // Inicializar la matriz de fichas.
     inicializarPiezas();
 
-    // Colocar algunas fichas en el tablero para el ejemplo.
-    // Supongamos que las fichas de un equipo son 'V' y 'v' y de otro 'R' y 'r'.
-    // Colocamos piezas en los bordes superior e inferior.
     piezas[0][0] = 'V';
     piezas[0][2] = 'V';
     piezas[0][4] = 'V';
@@ -149,7 +147,6 @@ int main() {
     int destinoFila, destinoCol;
     char continuar = 's';
 
-    // Bucle principal para mover fichas
     while (continuar == 's' || continuar == 'S') {
         printf("\nTablero actual:\n");
         tablero();
@@ -167,9 +164,6 @@ int main() {
         }
 
         moverFicha(origenFila, origenCol, destinoFila, destinoCol);
-
-        printf("\nMovimiento realizado.\n");
-        tablero();
 
         printf("\n¿Desea mover otra ficha? (s/n): ");
         scanf(" %c", &continuar);
